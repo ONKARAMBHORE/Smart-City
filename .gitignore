@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+db.sqlite3
+media/
+issue_images/
+.env
+venv/
+.vscode/

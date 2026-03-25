@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Issue - Smart Community{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <h2>Report an Issue</h2>
+    <form id="report-form" method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="text" name="title" id="title" placeholder="Issue Title" required>
+        <textarea name="description" id="description" placeholder="Describe the issue..." rows="5" required></textarea>
+        <input type="text" name="location" id="location" placeholder="Location / Address" required>
+        <select name="category" id="category" required>
+            <option value="">Select Category</option>
+            <option value="garbage">Garbage</option>
+            <option value="water">Water Issue</option>
+            <option value="electricity">Electricity</option>
+            <option value="road">Road / Pothole</option>
+            <option value="other">Other</option>
+        </select>
+        <label class="file-label">Attach photo (optional)</label>
+        <input type="file" name="image" id="image" accept="image/*">
+        <div id="preview-container" class="image-preview" style="display:none;">
+            <img id="preview" src="#" alt="Image preview">
+            <button type="button" id="remove-image">Remove</button>
+        </div>
+        <button type="submit">Submit Report</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Client-side image preview and basic validation
+document.addEventListener('DOMContentLoaded', function(){
+    const imgInput = document.getElementById('image');
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('preview-container');
+    const removeBtn = document.getElementById('remove-image');
+
+    if(imgInput){
+        imgInput.addEventListener('change', function(e){
+            const file = e.target.files[0];
+            if(!file) return;
+            if(!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                preview.src = ev.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if(removeBtn){
+        removeBtn.addEventListener('click', function(){
+            imgInput.value = '';
+            preview.src = '#';
+            previewContainer.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <h1>Admin Dashboard</h1>
+
+    <section class="stats">
+        <div class="stat-card">
+            <h3>Total Reports</h3>
+            <p>{{ total_reports }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>By Status</h3>
+            <ul>
+                {% for s in status_counts %}
+                    <li>{{ s.status }}: {{ s.count }}</li>
+                {% empty %}
+                    <li>No reports yet</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="stat-card">
+            <h3>By Category</h3>
+            <ul>
+                {% for c in category_counts %}
+                    <li>{{ c.category }}: {{ c.count }}</li>
+                {% empty %}
+                    <li>No reports yet</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+    <section class="recent-reports">
+        <h2>Recent Reports</h2>
+        <table class="reports-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in recent_reports %}
+                <tr>
+                    <td>
+                        {% if report.image %}
+                            <img src="{{ report.image.url }}" alt="{{ report.title }}" style="max-height:70px;">
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ report.title }}</td>
+                    <td>{{ report.user.username }}</td>
+                    <td>{{ report.get_category_display }}</td>
+                    <td>{{ report.status }}</td>
+                    <td>{{ report.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">No recent reports</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <div style="margin-top:16px">
+        <a class="button" href="/admin/">Open Django Admin</a>
+    </div>
+</div>
+{% endblock %}

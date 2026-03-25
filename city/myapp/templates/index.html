@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Smart Community Reporting{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+e2mYkG7QyQk0wM6Cqk6s5w5Q5Gkz0+3b9g6kPz0k=" crossorigin=""/>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-text">
+        <h1>Smart Community Reporting Platform</h1>
+        <p>Report issues in your community easily and track them in real-time.</p>
+        <button onclick="goToReport()">Report an Issue</button>
+    </div>
+    <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" class="hero-img" alt="Reporting">
+</section>
+
+<section class="stats" style="padding:30px 20px; max-width:1100px; margin:20px auto; display:flex; gap:12px; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:200px; text-align:center;">
+        <h3>Total Reports</h3>
+        <p style="font-size:28px; margin:6px 0;">{{ total_reports|default:0 }}</p>
+    </div>
+    <div class="card" style="flex:1; min-width:200px;">
+        <h3>Top Statuses</h3>
+        <ul style="text-align:left; margin:8px 0 0 12px;">
+            {% for s in status_counts %}
+                <li>{{ s.status }} — {{ s.count }}</li>
+            {% empty %}
+                <li>No data</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="card" style="flex:1; min-width:200px;">
+        <h3>Top Categories</h3>
+        <ul style="text-align:left; margin:8px 0 0 12px;">
+            {% for c in category_counts %}
+                <li>{{ c.category }} — {{ c.count }}</li>
+            {% empty %}
+                <li>No data</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+<section id="map-section" style="max-width:1100px;margin:20px auto;">
+    <h2>Map Overview</h2>
+    <div id="map" style="height:320px; border-radius:8px; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,0.08);"></div>
+</section>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+
+<script>
+    function initMap() {
+        // Coordinates for the center of the map (e.g., New York City)
+        const location = { lat: 40.7128, lng: -74.0060 };
+        
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: location,
+        });
+
+        // Add a marker at the location
+        const marker = new google.maps.Marker({
+            position: location,
+            map: map,
+        });
+    }
+</script>
+
+<section id="features" class="features">
+    <h2>Key Features</h2>
+    <div class="card-container">
+        <div class="card">
+            <h3>⚡ Quick Reporting</h3>
+            <p>Submit issues with photo, location & category.</p>
+        </div>
+        <div class="card">
+            <h3>🤖 AI Categorization</h3>
+            <p>System can suggest categories using NLP.</p>
+        </div>
+        <div class="card">
+            <h3>📍 Live Tracking</h3>
+            <p>Track complaint status and see updates.</p>
+        </div>
+        <div class="card">
+            <h3>📊 Admin Dashboard</h3>
+            <p>Manage, assign, and resolve reports efficiently.</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="icon">1</div>
+            <h4>Report</h4>
+            <p>Fill a simple form with photo, location and description.</p>
+        </div>
+        <div class="step">
+            <div class="icon">2</div>
+            <h4>Review</h4>
+            <p>Authorities review and categorize the report.</p>
+        </div>
+        <div class="step">
+            <div class="icon">3</div>
+            <h4>Resolve</h4>
+            <p>Track progress until the issue is resolved.</p>
+        </div>
+    </div>
+</section>
+
+<section class="recent-reports">
+    <h2>Recent Reports</h2>
+    <form class="report-controls" method="get" style="max-width:1100px;margin:0 auto 12px;display:flex;gap:12px;align-items:center;">
+        <input id="report-search" name="q" value="{{ filter_q }}" type="search" placeholder="Search reports..." style="flex:1;padding:10px;border-radius:6px;border:1px solid #ccc;">
+        <select id="report-category" name="category" style="padding:10px;border-radius:6px;border:1px solid #ccc;">
+            <option value="">All categories</option>
+            {% for c in categories %}
+                <option value="{{ c }}" {% if filter_category == c %}selected{% endif %}>{{ c|title }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" style="padding:10px 12px;border-radius:6px;border:none;background:#0a497b;color:#fff;cursor:pointer;">Apply</button>
+        <a href="/" id="clear-filters" style="padding:10px 12px;border-radius:6px;background:#ddd;color:#333;text-decoration:none;">Clear</a>
+    </form>
+    <div class="reports-grid">
+        {% if recent_reports %}
+            {% for r in recent_reports %}
+                <div class="report-card" tabindex="0" role="button"
+                     data-title="{{ r.title|lower }}"
+                     data-category="{{ r.category }}"
+                     data-status="{{ r.status|lower }}"
+                     data-description="{{ r.description|default:''|escapejs }}"
+                     data-image="{% if r.image %}{{ r.image.url }}{% endif %}"
+                     >
+                    <div class="thumb">
+                        {% if r.image %}
+                            <img src="{{ r.image.url }}" alt="{{ r.title }}">
+                        {% else %}
+                            <div class="no-thumb">No Image</div>
+                        {% endif %}
+                    </div>
+                    <div class="report-body">
+                        <h4 class="report-title">{{ r.title|truncatechars:40 }}</h4>
+                        <div class="meta"><span class="badge">{{ r.get_category_display }}</span> <span class="status">{{ r.status }}</span></div>
+                        <p class="location">{{ r.location }}</p>
+                        <small class="time">{{ r.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No reports yet. Be the first to <a href="{% url 'add_report' %}">report</a>.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="faq">
+    <h2>Frequently Asked Questions</h2>
+    <details>
+        <summary>How long until my issue is resolved?</summary>
+        <p>Resolution times vary by issue and city department workload; typical response is 3-7 business days.</p>
+    </details>
+    <details>
+        <summary>Can I update my report?</summary>
+        <p>Yes — log in, open your report and add more information or images.</p>
+    </details>
+    <details>
+        <summary>Who can see my report?</summary>
+        <p>Reports are visible to administrators and to you; sensitive data is not shared publicly.</p>
+    </details>
+</section>
+
+<section class="contact">
+    <h2>Contact & Support</h2>
+    <p>If you need help, email <a href="mailto:support@smartcity.local">support_ompatil@smartcity.local</a> or call <strong>+1 (555) 123-4567</strong>.</p>
+</section>
+ 
+<button id="back-to-top" title="Back to top">↑</button>
+
+<!-- Modal for report details -->
+<div id="report-modal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <button class="modal-close" aria-label="Close">×</button>
+        <div class="modal-grid">
+            <div class="modal-image"><img src="" alt="report image" class="modal-img"></div>
+            <div class="modal-body">
+                <h3 class="modal-title"></h3>
+                <div class="modal-meta"><span class="badge modal-category"></span> <span class="status modal-status"></span></div>
+                <p class="modal-desc"></p>
+                <a href="{% url 'add_report' %}" class="modal-report-more">Report another issue</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
