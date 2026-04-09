@@ -25,7 +25,7 @@ import os
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-temp-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -137,3 +137,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+import os
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
